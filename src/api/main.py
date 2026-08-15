@@ -111,19 +111,25 @@ async def create_submission(
             # The URL path for the frontend
             db_file_path = f"/media/{worker_id}_{file_name_safe}"
             
-            cur.execute(
-                """
-                INSERT INTO core.audio_submissions 
-                (worker_id, file_path, duration_seconds, sample_rate_hz, bitrate_kbps, loudness_db)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING submission_id
-                """,
-                (worker_id, db_file_path, duration, sample_rate, bitrate, loudness)
-            )
-            submission_id = cur.fetchone()[0]
-            conn.commit()
-            
-            return {"success": True, "submission_id": submission_id}
+            try:
+                cur.execute(
+                    """
+                    INSERT INTO core.audio_submissions 
+                    (worker_id, file_path, duration_seconds, sample_rate_hz, bitrate_kbps, loudness_db)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING submission_id
+                    """,
+                    (worker_id, db_file_path, duration, sample_rate, bitrate, loudness)
+                )
+                submission_id = cur.fetchone()[0]
+                conn.commit()
+                return {"success": True, "submission_id": submission_id}
+            except Exception as e:
+                # Rollback mechanism: delete the incorrectly uploaded file
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                conn.rollback()
+                raise HTTPException(status_code=500, detail="Database insertion failed. File rolled back.")
             
     finally:
         conn.close()
