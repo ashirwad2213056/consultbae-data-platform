@@ -1,0 +1,224 @@
+{
+  "name": "ConsultBae - Duplicate Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consultbae/new-applicant",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4efef724-045c-4e75-a300-978e286dbbcf",
+      "name": "Webhook",
+      "webhookId": "7bc61ddf-ad16-4f6d-ab01-d64522ae93b6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    worker_id,\n    canonical_name,\n    email,\n    phone_10\nFROM core.workers\nWHERE\n    ($1 <> '' AND LOWER(email) = LOWER($1))\n    OR\n    ($2 <> '' AND phone_10 = $2)\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "=={{ $json.body.email }},{{ $json.body.phone }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "516d49a6-ca87-4fee-aa06-a1b2eec075cd",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "BXQFDKmvaQiRaaZs",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "83a458ae-7d72-4180-8754-d3d4c3876502",
+              "leftValue": "={{ $json.worker_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c8a727b5-7654-4e36-83ca-3b05cd950eeb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://webhook.site/f8f81481-e07e-4cb8-a689-fda062645b21",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "DUPLICATE_DETECTED"
+            },
+            {
+              "name": "worker_id",
+              "value": "={{$json.worker_id}}"
+            },
+            {
+              "name": "name",
+              "value": "={{$json.canonical_name}}"
+            },
+            {
+              "name": "email",
+              "value": "={{$json.email}}"
+            },
+            {
+              "name": "phone",
+              "value": "={{$json.phone_10}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "6fdeb64d-3ff0-48d1-ba35-1c2caea8817d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a919529c-0ce9-4160-8a03-bfc51947db9a",
+              "name": "event",
+              "value": "NO_DUPLICATE",
+              "type": "string"
+            },
+            {
+              "id": "311938b8-bda9-4592-bbc0-aeac4f3b7b0a",
+              "name": "message",
+              "value": "Applicant does not exist in Core database",
+              "type": "string"
+            },
+            {
+              "id": "b5b2e832-8044-4914-8c4b-2e5c23fb4e7a",
+              "name": "name",
+              "value": "={{ $('Webhook').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "ed162de4-4e4c-41af-9606-ee2791ddd230",
+              "name": "email",
+              "value": "={{ $('Webhook').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "a74ac9a6-e7ac-4863-aaf5-6bacb1ed0df6",
+              "name": "phone",
+              "value": "={{ $('Webhook').item.json.body.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        96
+      ],
+      "id": "9205cb03-752a-46af-a20d-83b0a80cc4ad",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4441e5d8-a7ef-4f37-b10b-9f6dd49f3272",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d9caac76951bce96adcfd6a2c8b27e11fd5e3735beff079a80b7a39f66ea4e8d"
+  },
+  "nodeGroups": [],
+  "id": "8pyFymPv80atCSqg",
+  "tags": []
+}
