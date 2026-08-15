@@ -1,16 +1,25 @@
 from pathlib import Path
+from src.normalization.normalize_sources import (
+    repair_gig_column_shift,
+)
 
 import pandas as pd
+
+
 
 
 RAW_DIR = Path("data/raw")
 
 
 def normalize_email(value: str) -> str:
+    if not value:
+        return ""
     return value.strip().lower()
 
 
 def normalize_phone(value: str) -> str:
+    if not value:
+        return ""
     digits = "".join(
         character
         for character in value
@@ -59,7 +68,7 @@ def prepare_naukri(df):
     result = df.copy()
 
     result["source"] = "naukri"
-    result["source_row"] = result.index
+    result["source_row"] = result.index + 2
 
     result["email_normalized"] = (
         result["Email"].map(normalize_email)
@@ -87,8 +96,16 @@ def prepare_gig(df):
         )
     ].copy()
 
+    # Repair known column-shift anomaly.
+    repaired = result.to_dict("records")
+    repaired = [
+        repair_gig_column_shift(r)
+        for r in repaired
+    ]
+    result = pd.DataFrame(repaired, index=result.index)
+
     result["source"] = "gig"
-    result["source_row"] = result.index
+    result["source_row"] = result.index + 2
 
     result["email_normalized"] = (
         result["email_id"].map(normalize_email)
@@ -107,7 +124,7 @@ def prepare_cbnexus(df):
     ].copy()
 
     result["source"] = "cbnexus"
-    result["source_row"] = result.index
+    result["source_row"] = result.index + 2
 
     result["phone_normalized"] = (
         result["Phone Number"].map(normalize_phone)

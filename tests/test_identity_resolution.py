@@ -157,7 +157,7 @@ def test_resolve_all_identities_contract():
 
     assert (
         results["worker_id"].nunique()
-        == 61
+        == 60
     )
 
     assert set(results["source"]) == {

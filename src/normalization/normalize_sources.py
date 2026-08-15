@@ -1,6 +1,9 @@
 import re
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
+from src.normalization.validation_rules import (
+    is_malformed_gig_record,
+)
 
 
 CITY_MAP = {
@@ -8,18 +11,18 @@ CITY_MAP = {
     "bengaluru": "Bengaluru",
     "gurgaon": "Gurgaon",
     "gurugram": "Gurgaon",
-    "new delhi": "New Delhi",
+    "new delhi": "Delhi",
     "delhi": "Delhi",
-    "delhi ncr": "Delhi NCR",
+    "delhi ncr": "Delhi",
     "noida": "Noida",
     "pune": "Pune",
 }
 
 
 STATUS_MAP = {
-    "active": "active",
-    "inactive": "inactive",
-    "paused": "paused",
+    "active": "ACTIVE",
+    "inactive": "INACTIVE",
+    "paused": "PAUSED",
 }
 
 
@@ -29,6 +32,32 @@ VERIFIED_MAP = {
     "n": False,
     "no": False,
 }
+
+def repair_gig_column_shift(record):
+    """
+    Repair the known six-field left-shift pattern in Gig data.
+
+    Original received structure:
+        skill_tags, email_id, worker_name,
+        rate, location, status
+
+    Expected structure:
+        email_id, worker_name, rate,
+        location, status, skill_tags
+    """
+
+    if not is_malformed_gig_record(record):
+        return record
+
+    return {
+        **record,
+        "email_id": record["worker_name"],
+        "worker_name": record["rate"],
+        "rate": record["location"],
+        "location": record["status"],
+        "status": record["skill_tags"],
+        "skill_tags": record["email_id"],
+    }
 
 
 def normalize_text(value):

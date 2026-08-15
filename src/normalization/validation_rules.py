@@ -154,12 +154,12 @@ def is_malformed_gig_record(record: dict) -> bool:
     in the wrong columns.
     """
 
-    email = record.get("email", "")
+    email = record.get("email_id", "")
     worker_name = record.get("worker_name", "")
     rate = record.get("rate", "")
     location = record.get("location", "")
     status = record.get("status", "")
-    skills = record.get("skills", "")
+    skills = record.get("skill_tags", "")
 
     # A valid Gig email must look like an email.
     if email and not is_valid_email(email):

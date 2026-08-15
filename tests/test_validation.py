@@ -97,7 +97,7 @@ def test_invalid_naukri_record():
 def test_valid_gig_record():
     record = {
         "worker_name": "Deepak Nair",
-        "email": "deepak@example.com",
+        "email_id": "deepak@example.com",
         "rate_amount": 465,
         "rate_unit": "HOUR",
         "status": "active",
@@ -109,7 +109,7 @@ def test_valid_gig_record():
 def test_invalid_gig_record():
     record = {
         "worker_name": "",
-        "email": "invalid",
+        "email_id": "invalid",
         "rate_amount": None,
         "rate_unit": "YEAR",
         "status": "unknown",

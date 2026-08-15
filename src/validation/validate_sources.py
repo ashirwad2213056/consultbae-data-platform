@@ -8,6 +8,78 @@ VALID_GIG_STATUSES = {
 }
 
 
+def detect_gig_column_shift(record):
+    """
+    Detect the known Gig CSV column-shift pattern.
+
+    Expected:
+        email_id, worker_name, rate, location, status, skill_tags
+
+    Shifted pattern:
+        skill_tags, email_id, worker_name, rate, location, status
+
+    The pattern is considered structurally shifted when:
+        - first field looks like a skill list
+        - second field looks like an email
+        - third field looks like a worker name
+        - fourth field looks like a rate
+        - fifth field looks like a location
+        - sixth field looks like a status
+    """
+
+    email_id = str(
+        record.get("email_id") or ""
+    ).strip()
+
+    worker_name = str(
+        record.get("worker_name") or ""
+    ).strip()
+
+    rate = str(
+        record.get("rate") or ""
+    ).strip().lower()
+
+    location = str(
+        record.get("location") or ""
+    ).strip()
+
+    status = str(
+        record.get("status") or ""
+    ).strip().lower()
+
+    skill_tags = str(
+        record.get("skill_tags") or ""
+    ).strip()
+
+    looks_like_email = (
+        "@" in email_id
+        and "." in email_id.rsplit("@", 1)[-1]
+    )
+
+    looks_like_rate = (
+        rate.endswith("/hr")
+        or rate.endswith("/month")
+    )
+
+    looks_like_status = (
+        status in VALID_GIG_STATUSES
+    )
+
+    first_field_looks_like_skills = (
+        "," in email_id
+        and bool(email_id)
+    )
+
+    return (
+        first_field_looks_like_skills
+        and looks_like_email is False
+        and "@" in worker_name
+        and not looks_like_rate
+        and not looks_like_status
+        and skill_tags in VALID_GIG_STATUSES
+    )
+
+
 def is_valid_email(email):
     if not email:
         return True
@@ -86,11 +158,14 @@ def validate_naukri_record(record):
 def validate_gig_record(record):
     errors = []
 
+    if detect_gig_column_shift(record):
+        errors.append("GIG_COLUMN_SHIFT")
+
     if not record.get("worker_name"):
         errors.append("MISSING_NAME")
 
     if not is_valid_email(
-        record.get("email")
+        record.get("email_id")
     ):
         errors.append("INVALID_EMAIL")
 
@@ -109,7 +184,6 @@ def validate_gig_record(record):
         errors.append("INVALID_STATUS")
 
     return errors
-
 
 def validate_cbnexus_record(record):
     errors = []

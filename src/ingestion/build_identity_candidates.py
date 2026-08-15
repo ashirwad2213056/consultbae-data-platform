@@ -44,8 +44,8 @@ def normalize_city(value: str) -> str:
     city_map = {
         "bangalore": "bengaluru",
         "bengaluru": "bengaluru",
-        "gurgaon": "gurugram",
-        "gurugram": "gurugram",
+        "gurgaon": "gurgaon",
+        "gurugram": "gurgaon",
         "noida": "noida",
         "pune": "pune",
         "delhi": "delhi",
@@ -107,7 +107,7 @@ def prepare_naukri(df):
     df = df.copy()
 
     df["source"] = "naukri"
-    df["source_row"] = df.index
+    df["source_row"] = df.index + 2
 
     df["email_normalized"] = (
         df["Email"].map(normalize_email)
@@ -132,7 +132,7 @@ def prepare_gig(df):
     df = df.copy()
 
     df["source"] = "gig"
-    df["source_row"] = df.index
+    df["source_row"] = df.index + 2
 
     df["email_normalized"] = (
         df["email_id"].map(normalize_email)
@@ -156,7 +156,7 @@ def prepare_cbnexus(df):
     df = df.copy()
 
     df["source"] = "cbnexus"
-    df["source_row"] = df.index
+    df["source_row"] = df.index + 2
 
     # CBNexus has no email field.
     df["email_normalized"] = ""

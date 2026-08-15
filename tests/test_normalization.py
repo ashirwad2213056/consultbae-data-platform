@@ -55,9 +55,9 @@ def test_normalize_city():
 
 
 def test_normalize_status():
-    assert normalize_status("ACTIVE") == "active"
-    assert normalize_status("Inactive") == "inactive"
-    assert normalize_status("paused") == "paused"
+    assert normalize_status("ACTIVE") == "ACTIVE"
+    assert normalize_status("Inactive") == "INACTIVE"
+    assert normalize_status("paused") == "PAUSED"
 
 
 def test_normalize_verified():
