@@ -7,6 +7,9 @@ from src.ingestion.resolve_identities import (
     normalize_phone,
     resolve_all_identities,
 )
+from src.normalization.normalize_values import (
+    normalize_skills,
+)
 
 
 def get_staging_rows(conn):
@@ -339,6 +342,39 @@ def load_cbnexus_data(
     )
 
 
+def load_worker_skills(cur, worker_id, source_name, raw_skills_text):
+    if not raw_skills_text:
+        return
+
+    skills = normalize_skills(raw_skills_text)
+
+    for skill in skills:
+        cur.execute(
+            """
+            INSERT INTO core.skills (skill_name)
+            VALUES (%s)
+            ON CONFLICT (skill_name) DO UPDATE SET skill_name = EXCLUDED.skill_name
+            RETURNING skill_id
+            """,
+            (skill,),
+        )
+
+        result = cur.fetchone()
+        if not result:
+            continue
+
+        skill_id = result[0]
+
+        cur.execute(
+            """
+            INSERT INTO core.worker_skills (worker_id, skill_id, source_name)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (worker_id, skill_id, source_name) DO NOTHING
+            """,
+            (worker_id, skill_id, source_name),
+        )
+
+
 def load_core():
     results = resolve_all_identities()
 
@@ -422,12 +458,24 @@ def load_core():
                             worker_id,
                             staging_row,
                         )
+                        load_worker_skills(
+                            cur,
+                            worker_id,
+                            source,
+                            staging_row.get("skills"),
+                        )
 
                     elif source == "gig":
                         load_gig_data(
                             cur,
                             worker_id,
                             staging_row,
+                        )
+                        load_worker_skills(
+                            cur,
+                            worker_id,
+                            source,
+                            staging_row.get("skill_tags"),
                         )
 
                     elif source == "cbnexus":
