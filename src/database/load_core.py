@@ -9,6 +9,11 @@ from src.ingestion.resolve_identities import (
 )
 from src.normalization.normalize_values import (
     normalize_skills,
+    parse_ctc,
+    normalize_status,
+)
+from src.normalization.normalize_sources import (
+    repair_gig_column_shift,
 )
 
 
@@ -230,7 +235,7 @@ def load_naukri_data(
             worker_id,
             row["staging_id"],
             row["experience_years"],
-            row["current_ctc"],
+            row["current_ctc"] if row.get("current_ctc") is None else parse_ctc(row["current_ctc"]),
             parse_date(row["applied_date"]),
             worker_id,
             row["staging_id"],
@@ -288,7 +293,7 @@ def load_gig_data(
             row["staging_id"],
             rate_amount,
             rate_unit,
-            row["status"],
+            normalize_status(row["status"]),
             worker_id,
             row["staging_id"],
         ),
@@ -408,6 +413,9 @@ def load_core():
                     staging_row = staging_lookup[
                         (source, source_row)
                     ]
+
+                    if source == "gig":
+                        staging_row = repair_gig_column_shift(staging_row)
 
                     if source == "naukri":
                         name = staging_row["full_name"]
