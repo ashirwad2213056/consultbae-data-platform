@@ -1,0 +1,147 @@
+{
+    "name": "ConsultBae Duplicate Worker Alert",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "new-applicant",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "id": "1894d0e9-b5fe-4861-a583-bf9c0ea5b6c2",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "webhookId": "cb-dup-check-webhook"
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT worker_id, canonical_name FROM core.workers WHERE email = $1 OR phone_10 = $2 LIMIT 1;",
+                "options": {
+                    "queryParameters": "={{ $json.body.email }}, {{ $json.body.phone_10 }}"
+                }
+            },
+            "id": "55e2cbdc-bd5f-4a30-9b37-75e11dc54b2d",
+            "name": "Postgres Search",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2.2,
+            "position": [
+                420,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "placeholder_postgres",
+                    "name": "Postgres account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.worker_id ? true : false }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "id": "dc9f1ad4-39f5-4422-9cb9-8e68dbb660a9",
+            "name": "IF Matching",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                640,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "YOUR_SLACK_OR_DISCORD_WEBHOOK_URL",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "content",
+                            "value": "🚨 DUPLICATE DETECTED: This applicant already exists in ConsultBae as {{ $node[\"Postgres Search\"].json.worker_id }}."
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ca59bfb0-b5bf-41c3-8869-906d203874ce",
+            "name": "Send Discord Alert",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                860,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "id": "c16afec1-af5f-47ba-89a1-cbdbcb4df9b6",
+            "name": "No-Op Success",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                860,
+                420
+            ]
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Postgres Search",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Postgres Search": {
+            "main": [
+                [
+                    {
+                        "node": "IF Matching",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "IF Matching": {
+            "main": [
+                [
+                    {
+                        "node": "Send Discord Alert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "No-Op Success",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {},
+    "versionId": "f7d3a04e-28b9-4402-998e-4a6493dc2c51"
+}
