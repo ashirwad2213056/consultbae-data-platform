@@ -1,7 +1,11 @@
 from pathlib import Path
-from src.ingestion.resolve_identities import WorkerIdAllocator
 
 import pandas as pd
+
+from src.ingestion.resolve_identities import (
+    WorkerIdAllocator,
+    resolve_all_identities,
+)
 
 
 RAW_DIR = Path("data/raw")
@@ -130,3 +134,43 @@ def test_worker_id_allocator_is_sequential():
     assert allocator.next_id() == "W000041"
     assert allocator.next_id() == "W000042"
     assert allocator.next_id() == "W000043"
+
+
+
+
+def test_resolve_all_identities_contract():
+    (
+        naukri,
+        gig,
+        cbnexus,
+        results,
+        worker_map,
+    ) = resolve_all_identities()
+
+    assert len(naukri) == 42
+    assert len(gig) == 31
+    assert len(cbnexus) == 30
+
+    assert len(results) == 103
+
+    assert results["worker_id"].notna().all()
+
+    assert (
+        results["worker_id"].nunique()
+        == 61
+    )
+
+    assert set(results["source"]) == {
+        "naukri",
+        "gig",
+        "cbnexus",
+    }
+
+    assert set(
+        results["match_method"]
+    ) == {
+        "NAUKRI_ANCHOR",
+        "EXACT_EMAIL",
+        "EXACT_PHONE",
+        "SOURCE_ONLY",
+    }

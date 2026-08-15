@@ -510,17 +510,31 @@ def print_summary(
         )
 
 
-def main():
+def resolve_all_identities():
+    """
+    Resolve all source records against the Naukri identity anchor.
+
+    Identity rules:
+    - Naukri identities are clustered by exact normalized
+      email OR exact normalized phone.
+    - Gig matches Naukri by exact normalized email.
+    - CBNexus matches Naukri by exact normalized phone.
+    - Unmatched Gig and CBNexus records receive new WorkerIDs.
+    - Name and city are never used for identity resolution.
+
+    Returns:
+        tuple:
+            naukri,
+            gig,
+            cbnexus,
+            results
+    """
 
     naukri, gig, cbnexus = load_sources()
 
     naukri = prepare_naukri(naukri)
     gig = prepare_gig(gig)
     cbnexus = prepare_cbnexus(cbnexus)
-
-    # ---------------------------------------------------------
-    # 1. Resolve duplicate Naukri identities first.
-    # ---------------------------------------------------------
 
     (
         naukri_uf,
@@ -538,15 +552,6 @@ def main():
         start=len(set(worker_map.values())) + 1
     )
 
-    print_naukri_clusters(
-        naukri,
-        worker_map,
-    )
-
-    # ---------------------------------------------------------
-    # 2. Build Naukri identity lookups.
-    # ---------------------------------------------------------
-
     (
         email_lookup,
         phone_lookup,
@@ -555,19 +560,11 @@ def main():
         worker_map,
     )
 
-    # ---------------------------------------------------------
-    # 3. Match Gig → Naukri by email.
-    # ---------------------------------------------------------
-
     gig_results = resolve_gig(
         gig,
         email_lookup,
         worker_id_allocator,
     )
-
-    # ---------------------------------------------------------
-    # 4. Match CBNexus → Naukri by phone.
-    # ---------------------------------------------------------
 
     cbnexus_results = resolve_cbnexus(
         cbnexus,
@@ -575,14 +572,9 @@ def main():
         worker_id_allocator,
     )
 
-    # ---------------------------------------------------------
-    # 5. Naukri records.
-    # ---------------------------------------------------------
-
     naukri_results = []
 
     for _, row in naukri.iterrows():
-
         naukri_results.append(
             {
                 "worker_id": worker_map[
@@ -599,6 +591,30 @@ def main():
         naukri_results
         + gig_results
         + cbnexus_results
+    )
+
+    return (
+        naukri,
+        gig,
+        cbnexus,
+        results,
+        worker_map,
+    )
+
+
+def main():
+
+    (
+        naukri,
+        gig,
+        cbnexus,
+        results,
+        worker_map,
+    ) = resolve_all_identities()
+
+    print_naukri_clusters(
+        naukri,
+        worker_map,
     )
 
     print_summary(
