@@ -28,3 +28,5 @@ data/quarantine/*
 .idea/
 .DS_Store
 Thumbs.db
+audio_web/node_modules/
+data/uploads/
