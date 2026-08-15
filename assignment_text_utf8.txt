@@ -1,0 +1,65 @@
+﻿--- Page 1 ---
+ConsultBae ù AI Automation Take-Home Assignment
+Deadline: 48 hours from the time you receive this email. Late submissions are not evaluated.
+Expected effort: 10-14 focused hours across the 2 days. We are not looking for perfection, we are looking
+for working software and clear thinking. You WILL hit things you have never done before. That is
+intentional: figuring out what you do not know is the #1 skill this job needs.
+The problem
+At ConsultBae we run multiple products (recruitment gigs, CBNexus, and internal automations) and each
+has its own database. Your job is to merge them and automate on top, exactly the kind of work you would
+do here.
+You are given 3 CSV files, each from a different system, with overlapping people and inconsistent, messy
+data. This data is intentionally imperfect. Part of your evaluation is how many problems you find and how
+sensibly you handle them.
+Task 1 ù Merge (core)
+Design one clean database (SQLite/MySQL/Postgres, your choice) and write a script or pipeline that
+ingests all 3 files into it. The same person appearing in multiple files must become ONE record. Note: no
+single ID field is common across all files, you will need to think about how to match people.
+Task 2 ù Automate with a no-code/low-code tool (core)
+Build ONE working automation using n8n (free, self-hosted or cloud trial), Make, or Zapier, connected to
+your data. Pick any ONE:
+A flow that receives a new CSV (webhook/email/drive trigger), checks it against your database, and
+sends a duplicate alert (email/Slack/webhook)
+A flow with an LLM step that auto-tags each personÆs skill category (e.g. "automation-heavy", "web
+dev", "data") and writes results back
+Your own idea of similar scope ù surprise us
+Export the flow JSON into your repo and show it running in your video. Pure-code solutions for this task
+score zero, we use these tools daily and need to see you can work no-code too.
+Task 3 ù Mini audio collection app (core)
+We run gig projects where thousands of workers submit audio recordings. Build a miniature version: a web
+page (any stack, plain HTML/JS, Streamlit, Flask, React, your call) where a person can:
+Enter their name and phone number
+Record audio in the browser OR upload an audio file (either is fine)
+Submit ù the audio gets stored, and a record goes into your database from Task 1
+For every submitted audio, your app must automatically extract and store: duration, sample rate
+(kHz), bitrate, and loudness (dB). Bonus: a rough noise/quality estimate. If you have never worked with
+audio before, good, neither had we. Figure it out.
+Plus a second view listing all submissions with a play button and the extracted properties. Ugly is fine;
+working matters. Deploy it anywhere free (Render/Railway/Streamlit Cloud/ngrok during your video) or
+demo it running locally in your recording.
+
+--- Page 2 ---
+Task 4 ù Data issues report (core)
+A list of every data quality problem you found in the 3 files and what you did about it. Be specific.
+Task 5 ù Stretch (optional, attempt if you can)
+One page, no code: we launch your audio app to 5,000 gig workers over a single weekend. What breaks
+first? What would you change before launch? Think storage, uploads, failures, duplicates, cost.
+Submission (all 5 required)
+GitHub repo with your code. Commit as you go, we look at commit history, not just the final code.
+README with setup steps and your data issues report.
+Stuck log (in the README): the 2-3 hardest places you got stuck, and exactly how you got unstuck,
+what you searched, what you asked AI, what suggestions you rejected and why. Blank or generic stuck
+logs score zero: everyone gets stuck on this assignment, and how you get unstuck is the main thing we
+are hiring for.
+Screen recording (max 6 min, Loom or any tool): run your pipeline, show the audio app working
+end-to-end, walk through the 2-3 decisions you found hardest. Face not required, voice required.
+Reply to the assignment email with the repo link + video link before the deadline.
+A note on AI tools
+You may use ChatGPT/Claude/Copilot, we use them daily too. But you must understand and be able to
+defend every line. Shortlisted candidates will extend their own solution live on a call. In that round your
+submission is the starting point, and "the AI wrote it" is an instant no.
+What we score
+Working end-to-end pipeline over polish. Sensible matching logic. How many planted data issues you
+caught. Judgment in your stuck log and video. Speed.
+Good luck. Ship it.
+
