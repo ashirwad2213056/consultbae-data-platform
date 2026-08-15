@@ -157,6 +157,17 @@ class UnionFind:
         return groups
 
 
+class WorkerIdAllocator:
+
+    def __init__(self, start: int):
+        self.next_number = start
+
+    def next_id(self) -> str:
+        worker_id = f"W{self.next_number:06d}"
+        self.next_number += 1
+        return worker_id
+
+
 def build_naukri_identity_clusters(naukri):
     """
     Build identity clusters inside Naukri first.
@@ -273,10 +284,9 @@ def build_naukri_lookups(
 def resolve_gig(
     gig,
     email_lookup,
+    worker_id_allocator,
 ):
     results = []
-
-    next_unmatched = 1
 
     for _, row in gig.iterrows():
 
@@ -303,13 +313,15 @@ def resolve_gig(
 
         elif len(worker_ids) == 0:
 
+            worker_id = worker_id_allocator.next_id()
+
             results.append(
                 {
-                    "worker_id": None,
+                    "worker_id": worker_id,
                     "source": "gig",
                     "source_row": row["source_row"],
-                    "match_method": "UNMATCHED",
-                    "confidence": "UNMATCHED",
+                    "match_method": "SOURCE_ONLY",
+                    "confidence": "BASE",
                 }
             )
 
@@ -331,6 +343,7 @@ def resolve_gig(
 def resolve_cbnexus(
     cbnexus,
     phone_lookup,
+    worker_id_allocator,
 ):
     results = []
 
@@ -359,13 +372,15 @@ def resolve_cbnexus(
 
         elif len(worker_ids) == 0:
 
+            worker_id = worker_id_allocator.next_id()
+
             results.append(
                 {
-                    "worker_id": None,
+                    "worker_id": worker_id,
                     "source": "cbnexus",
                     "source_row": row["source_row"],
-                    "match_method": "UNMATCHED",
-                    "confidence": "UNMATCHED",
+                    "match_method": "SOURCE_ONLY",
+                    "confidence": "BASE",
                 }
             )
 
@@ -519,6 +534,10 @@ def main():
         naukri_uf
     )
 
+    worker_id_allocator = WorkerIdAllocator(
+        start=len(set(worker_map.values())) + 1
+    )
+
     print_naukri_clusters(
         naukri,
         worker_map,
@@ -543,6 +562,7 @@ def main():
     gig_results = resolve_gig(
         gig,
         email_lookup,
+        worker_id_allocator,
     )
 
     # ---------------------------------------------------------
@@ -552,6 +572,7 @@ def main():
     cbnexus_results = resolve_cbnexus(
         cbnexus,
         phone_lookup,
+        worker_id_allocator,
     )
 
     # ---------------------------------------------------------

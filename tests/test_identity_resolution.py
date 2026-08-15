@@ -1,4 +1,5 @@
 from pathlib import Path
+from src.ingestion.resolve_identities import WorkerIdAllocator
 
 import pandas as pd
 
@@ -122,3 +123,10 @@ def test_repeated_cbnexus_arjun_is_not_same_phone():
         "9000000131",
         "9000000272",
     }
+
+def test_worker_id_allocator_is_sequential():
+    allocator = WorkerIdAllocator(start=41)
+
+    assert allocator.next_id() == "W000041"
+    assert allocator.next_id() == "W000042"
+    assert allocator.next_id() == "W000043"
